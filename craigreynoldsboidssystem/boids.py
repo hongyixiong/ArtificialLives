@@ -34,6 +34,16 @@ class BoidsSimulation:
         Moves all boids to new positions.
         :return:
         """
+        for boid in self.boids_list:
+            v1 = rule1(boid)
+            v2 = rule2(boid)
+            v3 = rule3(boid)
+
+            new_velocity_0 = boid.velocity[0] + v1[0] + v2[0] + v3[0]
+            new_velocity_1 = boid.velocity[0] + v1[1] + v2[0] + v3[0]
+            boid.velocity = tuple(new_velocity_0, new_velocity_1)
+
+            boid.position = tuple(map(operator.add, boid.position, boid.velocity))
         pass
 
     def rule1(self, b, boids_list):

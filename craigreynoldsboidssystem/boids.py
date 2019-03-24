@@ -17,14 +17,23 @@ class BoidsSimulation:
         self.initialise_boids(self.num_boids)
         self.move_all_boids_to_new_positions()
 
-    def initialise_boids(self, num_boids):
+    def initialise_boids(self):
         """
         Initialise boids at random positions and velocity.
         :param num_boids: the number of boids to be created.
-        :return boids_list: the list of boids initialed
         """
+        for i in range(0, self.num_boids):
+            self.boid_list.append()
 
-        pass
+    def initialize_random_boid(self):
+        """
+        Initialise position and velocity for new boid.
+        :return: new_boid with random position and velocity
+        """
+        new_boid = Boid()
+        new_boid.position = (random.uniform(0, self.field_width), random.uniform(0, self.field_length))
+        new_boid.velocity = (random.uniform(-20, 20), random.uniform(-20, 20))
+        return new_boid
 
     def move_all_boids_to_new_positions(self):
         """
@@ -71,11 +80,6 @@ class BoidsSimulation:
 
 class Boid:
     def __init__(self):
-        pos_x = random.random()
-        pos_y = random.random()
-        vel_x = random.random()
-        vel_y = random.random()
-
         self.position = (0, 0)
         self.velocity = (0, 0)
 

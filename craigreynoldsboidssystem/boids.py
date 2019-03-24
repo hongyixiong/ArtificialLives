@@ -1,7 +1,7 @@
 import random
 import operator
 import tkinter
-
+import math
 
 class BoidsSimulation:
     def __init__(self, field_length, field_width, num_boids):
@@ -36,19 +36,46 @@ class BoidsSimulation:
         """
         pass
 
-    def rule1(self):
+    def rule1(self, b, boids_list):
         """
         This rule simulates flock cohesion.
-        :return:
+        :param b: the position of a selected Boid
+        :param boids_list: a list of positions of all Boids
+        :return: a tuple of the movement for Boid b
         """
-        pass
+        x = 0
+        y = 0
+        for boid in boids_list:
+            if boid != b:
+                x += boid.position[0]
+                y += boid.position[1]
 
-    def rule2(self):
+        total_boids = len(boids_list)
+        average_x = x / (total_boids - 1)
+        average_y = y / (total_boids - 1)
+
+        movement_x = (average_x - b.position[0]) / 100
+        movement_y = (average_y - b.position[1]) / 100
+        movement = (movement_x, movement_y)
+        return movement
+
+    def rule2(self, b, boids_list):
         """
         This rule simulates separation.
-        :return:
+        :param b: the position of a selected Boid
+        :param boids_list: a list of positions of all Boids
+        :return: a tuple of movement for Boid b
         """
-        pass
+        x = 0
+        y = 0
+        for boid in boids_list:
+            if boid != b:
+                if self.euclidean_distance(boid, b) < 100:
+                    x -= (boid.position[0] - b.position[0])
+                    y -= (boid.position[1] - b.position[1])
+
+        movement = (x, y)
+        return movement
 
     def rule3(self, boid):
         """
@@ -79,6 +106,15 @@ class BoidsSimulation:
         :return:
         """
         pass
+
+    def euclidean_distance(self, b1, b2):
+        '''
+        Calculate the euclidean distance between two Boids
+        :param b1: the position of the first selected Boid
+        :param b2: the position of the second selected Boid
+        :return: the euclidean distance between b1 and b2
+        '''
+        return math.sqrt((b1.position[0] - b2.position[0])**2 + (b1.position[1] - b2.position[1])**2)
 
 
 class Boid:

@@ -35,9 +35,9 @@ class BoidsSimulation:
         :return:
         """
         for boid in self.boids_list:
-            v1 = rule1(boid)
-            v2 = rule2(boid)
-            v3 = rule3(boid)
+            v1 = self.rule1(boid)
+            v2 = self.rule2(boid)
+            v3 = self.rule3(boid)
 
             new_velocity_0 = boid.velocity[0] + v1[0] + v2[0] + v3[0]
             new_velocity_1 = boid.velocity[0] + v1[1] + v2[0] + v3[0]

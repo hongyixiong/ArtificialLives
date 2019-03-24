@@ -1,6 +1,6 @@
 import random
 import operator
-import tkinter
+from tkinter import *
 import math
 
 
@@ -14,13 +14,16 @@ class BoidsSimulation:
         # todo: the following parameters can be changed.
         self.neighbour_radius = 10
         self.max_velocity = 10
+        self.boid_radius = 3
 
     def boids_simulation(self):
         self.initialise_boids()
+        self.build_graph()
+        mainloop()
         max_iteration = 10
         iteration = 1
         while iteration <= max_iteration:
-            self.draw_boids()
+            self.draw()
             self.move_all_boids_to_new_positions()
             iteration += 1
 
@@ -128,8 +131,41 @@ class BoidsSimulation:
         '''
         return math.sqrt((b1.position[0] - b2.position[0])**2 + (b1.position[1] - b2.position[1])**2)
 
-    def draw_boids(self):
-        pass
+    def build_graph(self):
+        global graph
+        global m
+        WIDTH = self.field_length
+        HEIGHT = self.field_width
+        root = Tk()
+        root.overrideredirect(True)
+        root.geometry('%dx%d+%d+%d' % (
+        WIDTH, HEIGHT, (root.winfo_screenwidth() - WIDTH) / 2, (root.winfo_screenheight() - HEIGHT) / 2))
+        root.bind_all('<Escape>', lambda event: event.widget.quit())
+        graph = Canvas(root, width=WIDTH, height=HEIGHT, background='white')
+        graph.after(200, self.update)
+        graph.pack()
+
+    def update(self):
+        # Main simulation loop.
+        self.draw()
+        self.move()
+        graph.after(200, self.update)
+
+    def draw(self):
+        graph.delete(ALL)
+        for boid in self.boids_list:
+            x1 = boid.position[0] - self.boid_radius
+            y1 = boid.position[1] - self.boid_radius
+            x2 = boid.position[0] + self.boid_radius
+            y2 = boid.position[1] + self.boid_radius
+
+            graph.create_oval((x1, y1, x2, y2), fill='red')
+        graph.update()
+
+    def move(self):
+        # for boid in self.boids_list:
+        #     simulate_wall(boid)
+        self.move_all_boids_to_new_positions()
 
 
 class Boid:

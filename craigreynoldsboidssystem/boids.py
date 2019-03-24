@@ -1,4 +1,5 @@
 import random
+import operator
 import tkinter
 
 
@@ -54,14 +55,16 @@ class BoidsSimulation:
         This rule simulates alignment.
         :return:
         """
-
+        velocity = (0, 0)
         for other_boid in self.boids_list:
             if other_boid != boid:
-                boid.velocity[0] += other_boid.velocity[0]
+                velocity = tuple(map(operator.add, velocity, other_boid.velocity))
 
+        boids_num = self.num_boids - 1
+        velocity = tuple(map(operator.truediv, velocity, (boids_num, boids_num)))
+        new_velocity = tuple(map(operator.sub, velocity, boid.velocity))
 
-
-        pass
+        return tuple(map(operator.truediv, new_velocity, (8, 8)))
 
     def rule4(self):
         """

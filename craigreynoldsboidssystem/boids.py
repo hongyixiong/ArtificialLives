@@ -68,7 +68,7 @@ def rule4():
 
 def rule5():
     """
-    This rule simultaes perching.
+    This rule simulates perching.
     :return:
     """
     pass

@@ -20,20 +20,13 @@ class BoidsSimulation:
     def initialise_boids(self):
         """
         Initialise boids at random positions and velocity.
-        :param num_boids: the number of boids to be created.
         """
         for i in range(0, self.num_boids):
-            self.boid_list.append()
+            new_boid = Boid()
+            new_boid.position = (random.uniform(0, self.field_width), random.uniform(0, self.field_length))
+            new_boid.velocity = (random.uniform(-20, 20), random.uniform(-20, 20))
+            self.boid_list.append(new_boid)
 
-    def initialize_random_boid(self):
-        """
-        Initialise position and velocity for new boid.
-        :return: new_boid with random position and velocity
-        """
-        new_boid = Boid()
-        new_boid.position = (random.uniform(0, self.field_width), random.uniform(0, self.field_length))
-        new_boid.velocity = (random.uniform(-20, 20), random.uniform(-20, 20))
-        return new_boid
 
     def move_all_boids_to_new_positions(self):
         """
@@ -62,6 +55,12 @@ class BoidsSimulation:
         :return:
         """
         pass
+
+    def average_velocity(self):
+        """
+        Calculate average_velo
+        :return:
+        """
 
     def rule4(self):
         """

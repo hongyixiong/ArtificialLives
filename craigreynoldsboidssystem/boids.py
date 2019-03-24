@@ -49,18 +49,19 @@ class BoidsSimulation:
         """
         pass
 
-    def rule3(self):
+    def rule3(self, boid):
         """
         This rule simulates alignment.
         :return:
         """
-        pass
 
-    def average_velocity(self):
-        """
-        Calculate average_velo
-        :return:
-        """
+        for other_boid in self.boids_list:
+            if other_boid != boid:
+                boid.velocity[0] += other_boid.velocity[0]
+
+
+
+        pass
 
     def rule4(self):
         """

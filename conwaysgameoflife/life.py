@@ -34,8 +34,8 @@ class ConwaysGame:
             self.writeFile(self.i)
             self.draw()
             graph.after(500, self.update)
-        else:
-            self.root.destroy()
+        # else:
+        #     self.root.destroy()
         self.i += 1
 
     def readFile(self, filename):

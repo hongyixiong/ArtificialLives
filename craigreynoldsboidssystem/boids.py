@@ -3,6 +3,7 @@ import operator
 import tkinter
 import math
 
+
 class BoidsSimulation:
     def __init__(self, field_length, field_width, num_boids):
         self.num_boids = num_boids
@@ -14,9 +15,14 @@ class BoidsSimulation:
         self.neighbour_radius = 10
         self.max_velocity = 10
 
-    def boids(self):
-        self.initialise_boids(self.num_boids)
-        self.move_all_boids_to_new_positions()
+    def boids_simulation(self):
+        self.initialise_boids()
+        max_iteration = 10
+        iteration = 1
+        while iteration <= max_iteration:
+            self.draw_boids()
+            self.move_all_boids_to_new_positions()
+            iteration += 1
 
     def initialise_boids(self):
         """
@@ -26,7 +32,7 @@ class BoidsSimulation:
             new_boid = Boid()
             new_boid.position = (random.uniform(0, self.field_width), random.uniform(0, self.field_length))
             new_boid.velocity = (random.uniform(-20, 20), random.uniform(-20, 20))
-            self.boid_list.append(new_boid)
+            self.boids_list.append(new_boid)
 
 
     def move_all_boids_to_new_positions(self):
@@ -42,9 +48,7 @@ class BoidsSimulation:
             new_velocity_0 = boid.velocity[0] + v1[0] + v2[0] + v3[0]
             new_velocity_1 = boid.velocity[0] + v1[1] + v2[0] + v3[0]
             boid.velocity = tuple(new_velocity_0, new_velocity_1)
-
             boid.position = tuple(map(operator.add, boid.position, boid.velocity))
-        pass
 
     def rule1(self, b, boids_list):
         """
@@ -126,6 +130,9 @@ class BoidsSimulation:
         '''
         return math.sqrt((b1.position[0] - b2.position[0])**2 + (b1.position[1] - b2.position[1])**2)
 
+    def draw_boids(self):
+        pass
+
 
 class Boid:
     def __init__(self):
@@ -138,7 +145,7 @@ def main():
     length = 100
     width = 100
     boids_simulation = BoidsSimulation(length, width, num_boids)
-    boids_simulation.boids()
+    boids_simulation.boids_simulation()
 
 
 main()

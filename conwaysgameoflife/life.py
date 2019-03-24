@@ -1,13 +1,42 @@
-class conwaysGame:
+from tkinter import *
+m = 50
+
+class ConwaysGame:
+
     def __init__(self, filename):
+        self.gens = 0  # this gets set in readFile
+        self.i = 0  # count which generation we are on
         self.cells = self.readFile(filename)
         self.output = open("outLife.txt", 'w')
-        self.writeFile(0)
-        for i in range(self.gens):
-            self.new_generation()
-            self.writeFile(i + 1)
+        global graph
+        global m
 
+        WIDTH = m * len(self.cells[0])
+        HEIGHT = m * len(self.cells)
+        self.root = Tk()
+        self.root.geometry(
+            '%dx%d+%d+%d' % (WIDTH, HEIGHT, (self.root.winfo_screenwidth() - WIDTH) / 2, (self.root.winfo_screenheight() -
+                                                                                     HEIGHT) / 2))
+        self.root.bind_all('<Escape>', lambda event: event.widget.quit())
+        graph = Canvas(self.root, width=WIDTH, height=HEIGHT, background='white')
+        graph.after(40, self.update)
+        graph.pack()
+        self.root.mainloop()
         self.output.close()
+
+    def update(self):
+        if self.i == 0:
+            self.writeFile(self.i)
+            self.draw()
+            graph.after(500, self.update)
+        elif self.i <= self.gens:
+            self.new_generation()
+            self.writeFile(self.i)
+            self.draw()
+            graph.after(500, self.update)
+        else:
+            self.root.destroy()
+        self.i += 1
 
     def readFile(self, filename):
         f = open(filename, 'r')
@@ -24,10 +53,9 @@ class conwaysGame:
         return cells
 
     def writeFile(self, gens):
-
         self.output.write("Generation " + str(gens) + "\n")
         for line in self.cells:
-            line = "".join(str(line))
+            line = "".join(str(x) for x in line)
             self.output.write(line + "\n")
 
     # alive_neighbours will return the number of neighbours alive for (cell_x, cell_y)
@@ -89,11 +117,30 @@ class conwaysGame:
 
         self.cells = new_cells
 
+    def draw(self):
+        global m
+        newGrid = self.cells  # next_gen()
+        graph.delete(ALL)
+        row = 0
+        while row < len(newGrid):
+            col = 0
+            while col < len(newGrid[0]):
+                cell = newGrid[row][col]
+                startX = m * col
+                endX = startX + m
+                startY = m * row
+                endY = startY + m
+                if cell == 1:
+                    graph.create_rectangle(startX, startY, endX, endY, fill="red")
+                else:
+                    graph.create_rectangle(startX, startY, endX, endY, fill="black")
+                col = col + 1
+            row = row + 1
+        graph.update()
+
 
 def main():
-    x = conwaysGame("inLife.txt")
-
-    # at the end: x.writeFile()
+    x = ConwaysGame("inLife.txt")
 
 
 main()

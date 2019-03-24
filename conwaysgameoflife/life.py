@@ -1,12 +1,13 @@
 from tkinter import *
 m = 50
 
+
 class ConwaysGame:
 
     def __init__(self, filename):
         self.gens = 0  # this gets set in readFile
         self.i = 0  # count which generation we are on
-        self.cells = self.readFile(filename)
+        self.cells = self.read_file(filename)
         self.output = open("outLife.txt", 'w')
         global graph
         global m
@@ -26,19 +27,19 @@ class ConwaysGame:
 
     def update(self):
         if self.i == 0:
-            self.writeFile(self.i)
+            self.write_file(self.i)
             self.draw()
             graph.after(500, self.update)
         elif self.i <= self.gens:
             self.new_generation()
-            self.writeFile(self.i)
+            self.write_file(self.i)
             self.draw()
             graph.after(500, self.update)
         # else:
         #     self.root.destroy()
         self.i += 1
 
-    def readFile(self, filename):
+    def read_file(self, filename):
         f = open(filename, 'r')
         cells = []
         self.gens = int(f.readline())
@@ -52,7 +53,7 @@ class ConwaysGame:
         f.close()
         return cells
 
-    def writeFile(self, gens):
+    def write_file(self, gens):
         self.output.write("Generation " + str(gens) + "\n")
         for line in self.cells:
             line = "".join(str(x) for x in line)

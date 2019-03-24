@@ -45,26 +45,25 @@ class BoidsSimulation:
             v2 = self.rule2(boid)
             v3 = self.rule3(boid)
 
-            new_velocity_0 = boid.velocity[0] + v1[0] + v2[0] + v3[0]
-            new_velocity_1 = boid.velocity[0] + v1[1] + v2[0] + v3[0]
-            boid.velocity = tuple(new_velocity_0, new_velocity_1)
+            boid.velocity = tuple(map(operator.add, boid.velocity, v1))
+            boid.velocity = tuple(map(operator.add, boid.velocity, v2))
+            boid.velocity = tuple(map(operator.add, boid.velocity, v3))
             boid.position = tuple(map(operator.add, boid.position, boid.velocity))
 
-    def rule1(self, b, boids_list):
+    def rule1(self, b):
         """
         This rule simulates flock cohesion.
         :param b: the position of a selected Boid
-        :param boids_list: a list of positions of all Boids
         :return: a tuple of the movement for Boid b
         """
         x = 0
         y = 0
-        for boid in boids_list:
+        for boid in self.boids_list:
             if boid != b:
                 x += boid.position[0]
                 y += boid.position[1]
 
-        total_boids = len(boids_list)
+        total_boids = len(self.boids_list)
         average_x = x / (total_boids - 1)
         average_y = y / (total_boids - 1)
 
@@ -73,16 +72,15 @@ class BoidsSimulation:
         movement = (movement_x, movement_y)
         return movement
 
-    def rule2(self, b, boids_list):
+    def rule2(self, b):
         """
         This rule simulates separation.
         :param b: the position of a selected Boid
-        :param boids_list: a list of positions of all Boids
         :return: a tuple of movement for Boid b
         """
         x = 0
         y = 0
-        for boid in boids_list:
+        for boid in self.boids_list:
             if boid != b:
                 if self.euclidean_distance(boid, b) < 100:
                     x -= (boid.position[0] - b.position[0])

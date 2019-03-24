@@ -3,10 +3,12 @@ import tkinter
 
 
 class BoidsSimulation:
-    def __init__(self, length, width, num_boids):
+    def __init__(self, field_length, field_width, num_boids):
         self.num_boids = num_boids
-        self.length = length
-        self.width = width
+        self.field_length = field_length
+        self.field_width = field_width
+        self.boids_list = []
+
         # todo: the following parameters can be changed.
         self.neighbour_radius = 10
         self.max_velocity = 10
@@ -19,7 +21,9 @@ class BoidsSimulation:
         """
         Initialise boids at random positions and velocity.
         :param num_boids: the number of boids to be created.
+        :return boids_list: the list of boids initialed
         """
+
         pass
 
     def move_all_boids_to_new_positions(self):

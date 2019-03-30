@@ -170,6 +170,10 @@ class BoidsSimulation:
     def simulate_wall(self, boid):
         # Create viewing boundaries.
         # Todo: Modify rules
+        WALL = 0
+        WALL_FORCE = 0
+        HEIGHT = 0
+        WIDTH = 0
         if boid.position[0] < WALL:
             boid.velocity.x += WALL_FORCE
         elif boid.position[0] > WIDTH - WALL:

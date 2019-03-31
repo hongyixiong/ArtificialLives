@@ -59,6 +59,10 @@ class Boid:
     def __init__(self):
         self.position = Vector(0, 0, 0)
         self.velocity = Vector(0, 0, 0)
+        self.is_perching = False
+        self.perching_start_time = 0
+        self.perching_avg_duration = 16
+        self.perching_end_time = 0
 
     def __str__(self):
         return "({}{})".format(self.position, self.velocity)
@@ -120,13 +124,13 @@ class BoidsSimulation:
         """
         for i in range(self.num_boids):
             boid = Boid()
-            # pos_x = random.uniform(0, self.field_length)
-            # pos_y = random.uniform(0, self.field_width)
-            # pos_z = random.uniform(0, self.field_height)
-            standard_deviation = 20
-            pos_x = random.gauss(self.field_length / 2, standard_deviation)
-            pos_y = random.gauss(self.field_width / 2, standard_deviation)
-            pos_z = random.gauss(self.field_height / 2, standard_deviation)
+            pos_x = random.uniform(0, self.field_length)
+            pos_y = random.uniform(0, self.field_width)
+            pos_z = random.uniform(0, self.field_height)
+            # standard_deviation = 20
+            # pos_x = random.gauss(self.field_length / 2, standard_deviation)
+            # pos_y = random.gauss(self.field_width / 2, standard_deviation)
+            # pos_z = random.gauss(self.field_height / 2, standard_deviation)
             vel_x = random.uniform(-self.max_velocity, self.max_velocity)
             vel_y = random.uniform(-self.max_velocity, self.max_velocity)
             vel_z = random.uniform(-self.max_velocity, self.max_velocity)
@@ -147,6 +151,12 @@ class BoidsSimulation:
         temp_boids_list = []
         current_time = time.time()
         for boid in self.boids_list:
+            if boid.is_perching:
+                if current_time <= boid.perching_end_time:
+                    temp_boids_list.append(boid)
+                    continue
+                else:
+                    boid.is_perching = False
             v1 = Vector.multiply_constant(self.c_1, self.rule1(boid))
             v2 = Vector.multiply_constant(self.c_2, self.rule2(boid))
             v3 = Vector.multiply_constant(self.c_3, self.rule3(boid))
@@ -155,7 +165,6 @@ class BoidsSimulation:
 
             temp_boid = Boid()
             temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v5, v6)
-            # temp_boid.velocity = Vector.add(boid.velocity, v2, v5, v6)  # if only 1 boid.
             self.limit_velocity(temp_boid)
 
             if self.wind_start_time <= current_time <= self.wind_end_time:
@@ -168,6 +177,15 @@ class BoidsSimulation:
                 wind = Vector(0, 0, 0)
 
             temp_boid.position = Vector.add(boid.position, temp_boid.velocity, wind)
+
+            # starts perching if reaches ground level
+            if temp_boid.position.z < 0.1:
+                temp_boid.position.z = 0.1
+                temp_boid.perching_start_time = current_time
+                temp_boid.perching_end_time = temp_boid.perching_start_time + temp_boid.perching_avg_duration \
+                                              + random.uniform(-5, 5)
+                temp_boid.is_perching = True
+
             temp_boids_list.append(temp_boid)
             # self.print_boids_list()
         self.boids_list = temp_boids_list
@@ -184,7 +202,7 @@ class BoidsSimulation:
             boid.velocity = Vector.multiply_constant(self.max_velocity, Vector.unit(boid_velocity))
 
     def bound_position(self, boid):
-        force = 2
+        force = 1
         delta_vel = Vector(0, 0, 0)
 
         boid_position = boid.position
@@ -209,12 +227,15 @@ class BoidsSimulation:
         :return: a vector representing the displacement for the boid
         """
         delta_pos = Vector(0, 0, 0)
+        count = 0
         for b in self.boids_list:
-            if b != boid:
+            if b != boid and self.is_neighbour(b, boid):
                 delta_pos = Vector.add(delta_pos, b.position)
+                count += 1
 
-        # the following line calculates: delta_pos = delta_pos / (N-1)
-        delta_pos = Vector.multiply_constant(1 / (self.num_boids - 1), delta_pos)
+        # the following line calculates: delta_pos = delta_pos / count
+        if count > 0:
+            delta_pos = Vector.multiply_constant(1 / count, delta_pos)
         # the following line returns delta_pos - boid.position
         return Vector.add(delta_pos, Vector.multiply_constant(-1, boid.position))
 
@@ -226,7 +247,7 @@ class BoidsSimulation:
         """
         delta_vel = Vector(0, 0, 0)
         for b in self.boids_list:
-            if b != boid:
+            if b != boid and self.is_neighbour(b, boid):
                 if Vector.euclidean_distance(b.position, boid.position) < self.safe_distance:
                     # The formula is:
                     # delta_vel = delta_vel - (b.position - boid.position)
@@ -241,12 +262,14 @@ class BoidsSimulation:
         :return: a vector representing the displacement for the boid
         """
         delta_vel = Vector(0, 0, 0)
+        count = 0
         for b in self.boids_list:
-            if b != boid:
+            if b != boid and self.is_neighbour(b, boid):
                 delta_vel = Vector.add(delta_vel, b.velocity)
-
-        # The following line calculates: delta_vel = delta_vel / (N-1)
-        delta_vel = Vector.multiply_constant(1 / (self.num_boids - 1), delta_vel)
+                count += 1
+        if count > 0:
+            # The following line calculates: delta_vel = delta_vel / count
+            delta_vel = Vector.multiply_constant(1 / count, delta_vel)
         return delta_vel
 
     def wind(self, boid):
@@ -255,7 +278,6 @@ class BoidsSimulation:
         :param boid: the position of a selected boid
         :return: a unit vector representing direction of wind.
         """
-        # todo: implement many more rules
         x = -1
         y = 0
         z = 0
@@ -272,6 +294,11 @@ class BoidsSimulation:
         """
         # todo: implement perching and more rules.
         return Vector(0, 0, 0)
+
+    def is_neighbour(self, boid_1, boid_2):
+        if Vector.euclidean_distance(boid_1.position, boid_2.position) <= self.neighbour_radius:
+            return True
+        return False
 
     def build_graph(self):
         matplotlib.interactive(True)
@@ -315,7 +342,7 @@ class BoidsSimulation:
 
 
 def main():
-    num_boids = 10
+    num_boids = 50
     length = 1000
     width = 1000
     height = 100

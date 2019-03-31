@@ -163,25 +163,25 @@ class BoidsSimulation:
         graph.update()
 
     def move(self):
-        for boid in self.boids_list:
-            self.simulate_wall(boid)
+        # for boid in self.boids_list:
+        #     self.simulate_wall(boid)
         self.move_all_boids_to_new_positions()
 
-    def simulate_wall(self, boid):
-        # Create viewing boundaries.
-        # Todo: Modify rules
-        WALL = 0
-        WALL_FORCE = 0
-        HEIGHT = 0
-        WIDTH = 0
-        if boid.position[0] < WALL:
-            boid.velocity.x += WALL_FORCE
-        elif boid.position[0] > WIDTH - WALL:
-            boid.velocity.x -= WALL_FORCE
-        if boid.position[1] < WALL:
-            boid.velocity.y += WALL_FORCE
-        elif boid.position[1] > HEIGHT - WALL:
-            boid.velocity.y -= WALL_FORCE
+    # def simulate_wall(self, boid):
+    #     # Create viewing boundaries.
+    #     # Todo: Modify rules
+    #     WALL = 0
+    #     WALL_FORCE = 0
+    #     HEIGHT = 0
+    #     WIDTH = 0
+    #     if boid.position[0] < WALL:
+    #         boid.velocity.x += WALL_FORCE
+    #     elif boid.position[0] > WIDTH - WALL:
+    #         boid.velocity.x -= WALL_FORCE
+    #     if boid.position[1] < WALL:
+    #         boid.velocity.y += WALL_FORCE
+    #     elif boid.position[1] > HEIGHT - WALL:
+    #         boid.velocity.y -= WALL_FORCE
 
 
 class Boid:

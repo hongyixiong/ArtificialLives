@@ -79,18 +79,20 @@ class BoidsSimulation:
         self.safe_distance = 20
 
         self.start_time = time.time()
-        self.wind_start_time = self.start_time + 10
-        self.wind_end_time = self.start_time + 20
+        self.wind_start_time = self.start_time + 5
+        self.wind_end_time = self.start_time + 15
+        self.is_wind_description_added = False
 
         # the following are constant multipliers for rules
         self.c_1 = 10 / 1000  # cohesion
         self.c_2 = 10 / 1000  # separation
         self.c_3 = 50 / 1000  # alignment
-        self.c_4 = 500 / 1000  # wind
         self.c_5 = 1  # perching
+        self.c_wind = 2  # wind
 
         # the following are for drawing on a graph
         self.fig = None
+        self.fig_num = 1
         self.ax = None
         self.surface = None
 
@@ -104,33 +106,30 @@ class BoidsSimulation:
         iteration = 1
         # while iteration < max_iteration:
         while True:
-            if not plt.fignum_exists(1):
+            if not plt.fignum_exists(self.fig_num):
                 # if user closes the figure, then break out of loop to terminate program.
                 break
-            print("The current frame number is:", iteration)
+            # print("The current frame number is:", iteration)
             self.draw_boids()
             self.move_all_boids_to_new_positions()
             iteration += 1
 
     def initialise_boids(self):
         """
-        Initialise boids at random positions and velocities.
+        Initialise boids with Gaussian random positions and uniform random velocities.
         """
         for i in range(self.num_boids):
             boid = Boid()
             # pos_x = random.uniform(0, self.field_length)
             # pos_y = random.uniform(0, self.field_width)
             # pos_z = random.uniform(0, self.field_height)
-            standart_deviation = 20
-            pos_x = random.gauss(self.field_length / 2, standart_deviation)
-            pos_y = random.gauss(self.field_width / 2, standart_deviation)
-            pos_z = random.gauss(self.field_height / 2, standart_deviation)
+            standard_deviation = 20
+            pos_x = random.gauss(self.field_length / 2, standard_deviation)
+            pos_y = random.gauss(self.field_width / 2, standard_deviation)
+            pos_z = random.gauss(self.field_height / 2, standard_deviation)
             vel_x = random.uniform(-self.max_velocity, self.max_velocity)
             vel_y = random.uniform(-self.max_velocity, self.max_velocity)
             vel_z = random.uniform(-self.max_velocity, self.max_velocity)
-            # vel_x = random.uniform(-self.max_velocity, 0)
-            # vel_y = random.uniform(-self.max_velocity, 0)
-            # vel_z = random.uniform(-self.max_velocity, 0)
 
             boid.position = Vector(pos_x, pos_y, pos_z)
             boid.velocity = Vector(vel_x, vel_y, vel_z)
@@ -151,19 +150,24 @@ class BoidsSimulation:
             v1 = Vector.multiply_constant(self.c_1, self.rule1(boid))
             v2 = Vector.multiply_constant(self.c_2, self.rule2(boid))
             v3 = Vector.multiply_constant(self.c_3, self.rule3(boid))
-            if self.wind_start_time <= current_time <= self.wind_end_time:
-                v4 = Vector.multiply_constant(self.c_4, self.rule4(boid))
-            else:
-                v4 = Vector(0, 0, 0)
             v5 = Vector.multiply_constant(self.c_5, self.rule5(boid))
             v6 = self.bound_position(boid)
 
             temp_boid = Boid()
-            temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v4, v5, v6)
+            temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v5, v6)
             # temp_boid.velocity = Vector.add(boid.velocity, v2, v5, v6)  # if only 1 boid.
             self.limit_velocity(temp_boid)
 
-            temp_boid.position = Vector.add(boid.position, temp_boid.velocity)
+            if self.wind_start_time <= current_time <= self.wind_end_time:
+                if not self.is_wind_description_added:
+                    self.fig.text(0.01, 0.9, "Strong wind going (-1, 0, 0) direction is in effect")
+                    self.is_wind_description_added = True
+                wind = Vector.multiply_constant(self.c_wind, self.wind(boid))
+            else:
+                self.fig.texts.clear()
+                wind = Vector(0, 0, 0)
+
+            temp_boid.position = Vector.add(boid.position, temp_boid.velocity, wind)
             temp_boids_list.append(temp_boid)
             # self.print_boids_list()
         self.boids_list = temp_boids_list
@@ -245,7 +249,7 @@ class BoidsSimulation:
         delta_vel = Vector.multiply_constant(1 / (self.num_boids - 1), delta_vel)
         return delta_vel
 
-    def rule4(self, boid):
+    def wind(self, boid):
         """
         This rule simulates wind.
         :param boid: the position of a selected boid
@@ -275,7 +279,7 @@ class BoidsSimulation:
         # plt.axis('equal')
         # plt.axis('scaled')
         # plt.figure(figsize=(10, 8))
-        self.fig = plt.figure(1)
+        self.fig = plt.figure(self.fig_num)
         self.ax = self.fig.add_subplot(1, 1, 1, projection='3d')
         self.ax.set_title("Craig Reynolds' Boids System")
         self.ax.set_xlabel("x-axis")
@@ -313,7 +317,7 @@ class BoidsSimulation:
 def main():
     num_boids = 10
     length = 1000
-    width = 500
+    width = 1000
     height = 100
     boids_simulation = BoidsSimulation(length, width, height, num_boids)
     boids_simulation.boids_simulation()

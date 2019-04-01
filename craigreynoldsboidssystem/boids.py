@@ -78,27 +78,35 @@ class BoidsSimulation:
 
         # todo: the following parameters can be changed.
         self.neighbour_radius = 100
-        self.max_velocity = 1
+        self.max_velocity = 3
         self.max_acceleration = 0.1
-        self.safe_distance = 20
+        self.safe_distance = 50
 
         self.start_time = time.time()
         self.wind_start_time = self.start_time + 5
         self.wind_end_time = self.start_time + 15
         self.is_wind_description_added = False
 
+        self.goal = Vector(0, 0, 0)
+        self.goal_start_time = self.start_time + 20
+        self.goal_duration = 10
+        self.goal_end_time = self.goal_start_time + self.goal_duration
+        self.is_goal_set = False
+        self.is_goal_description_added = False
+
         # the following are constant multipliers for rules
-        self.c_1 = 10 / 1000  # cohesion
-        self.c_2 = 10 / 1000  # separation
-        self.c_3 = 50 / 1000  # alignment
-        self.c_5 = 1  # perching
-        self.c_wind = 2  # wind
+        self.c_1 = 1 / 1000  # cohesion
+        self.c_2 = 100 / 1000  # separation
+        self.c_3 = 500 / 1000  # alignment
+        self.c_5 = 20 / 1000  # tend to place
+        self.c_wind = 3  # wind
 
         # the following are for drawing on a graph
         self.fig = None
         self.fig_num = 1
         self.ax = None
         self.surface = None
+        self.surface_goal = None
 
     def boids_simulation(self):
         self.initialise_boids()
@@ -160,27 +168,46 @@ class BoidsSimulation:
             v1 = Vector.multiply_constant(self.c_1, self.rule1(boid))
             v2 = Vector.multiply_constant(self.c_2, self.rule2(boid))
             v3 = Vector.multiply_constant(self.c_3, self.rule3(boid))
-            v5 = Vector.multiply_constant(self.c_5, self.rule5(boid))
+            v5 = Vector(0, 0, 0)
+            if self.goal_start_time < current_time < self.goal_end_time:
+                if not self.is_goal_description_added:
+                    self.fig.text(0.01, 0.8, "* - Goal")
+                    self.is_goal_description_added = True
+                if not self.is_goal_set:
+                    goal_x = random.uniform(0, self.field_length)
+                    goal_y = random.uniform(0, self.field_width)
+                    goal_z = random.uniform(10, self.field_height)  # set minimum to 10 to reduce excessive perching
+                    self.goal = Vector(goal_x, goal_y, goal_z)
+                    self.is_goal_set = True
+                v5 = Vector.multiply_constant(self.c_5, self.tend_to_place(boid))
+            elif current_time > self.goal_end_time:
+                self.goal_start_time = time.time() + 15
+                self.goal_end_time = self.goal_start_time + self.goal_duration
+                self.is_goal_set = False
+
             v6 = self.bound_position(boid)
 
             temp_boid = Boid()
             temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v5, v6)
             self.limit_velocity(temp_boid)
 
+            wind = Vector(0, 0, 0)
             if self.wind_start_time <= current_time <= self.wind_end_time:
                 if not self.is_wind_description_added:
-                    self.fig.text(0.01, 0.9, "Strong wind going (-1, 0, 0) direction is in effect")
+                    self.fig.text(0.01, 0.9, "Strong wind going (1, 0, 0) direction is in effect")
                     self.is_wind_description_added = True
                 wind = Vector.multiply_constant(self.c_wind, self.wind(boid))
-            else:
+            elif self.is_wind_description_added:
                 self.fig.texts.clear()
-                wind = Vector(0, 0, 0)
+                self.is_wind_description_added = False
 
             temp_boid.position = Vector.add(boid.position, temp_boid.velocity, wind)
 
             # starts perching if reaches ground level
             if temp_boid.position.z < 0.1:
                 temp_boid.position.z = 0.1
+                # todo: verify that this is not buggy
+                temp_boid.velocity = Vector(0, 0, 0)
                 temp_boid.perching_start_time = current_time
                 temp_boid.perching_end_time = temp_boid.perching_start_time + temp_boid.perching_avg_duration \
                                               + random.uniform(-5, 5)
@@ -236,8 +263,10 @@ class BoidsSimulation:
         # the following line calculates: delta_pos = delta_pos / count
         if count > 0:
             delta_pos = Vector.multiply_constant(1 / count, delta_pos)
-        # the following line returns delta_pos - boid.position
-        return Vector.add(delta_pos, Vector.multiply_constant(-1, boid.position))
+            # the following line returns delta_pos - boid.position
+            return Vector.add(delta_pos, Vector.multiply_constant(-1, boid.position))
+        else:
+            return delta_pos
 
     def rule2(self, boid):
         """
@@ -278,7 +307,7 @@ class BoidsSimulation:
         :param boid: the position of a selected boid
         :return: a unit vector representing direction of wind.
         """
-        x = -1
+        x = 1
         y = 0
         z = 0
 
@@ -286,14 +315,13 @@ class BoidsSimulation:
         # vec = Vector.unit(vec)
         return vec
 
-    def rule5(self, boid):
+    def tend_to_place(self, boid):
         """
-        This rule simulates perching.
+        This rule simulates moving towards a place.
         :param boid: the position of a selected boid
         :return: a vector representing the displacement for the boid
         """
-        # todo: implement perching and more rules.
-        return Vector(0, 0, 0)
+        return Vector.add(self.goal, Vector.multiply_constant(-1, boid.position))
 
     def is_neighbour(self, boid_1, boid_2):
         if Vector.euclidean_distance(boid_1.position, boid_2.position) <= self.neighbour_radius:
@@ -327,25 +355,30 @@ class BoidsSimulation:
             zs.append(boid_position.z)
 
         if self.surface is not None:
-            self.surface.remove()  # clear graph
+            self.surface.remove()  # clear boids
+        if self.surface_goal is not None:
+            self.surface_goal.remove()  # clear goal
+            self.surface_goal = None
 
         self.surface = self.ax.scatter(xs, ys, zs, color='red')  # redraw boids on graph
+        if self.is_goal_set:
+            self.surface_goal = self.ax.scatter(self.goal.x, self.goal.y, self.goal.z, color='blue', marker='*')
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        time.sleep(0.00001)
+        time.sleep(0.0000001)
 
     def print_boids_list(self):
-        print("This is the start of boids_list")
+        print("This is the start of current boids_list")
         for boid in self.boids_list:
             print(boid)
-        print("This is the end of boids_list")
+        print("This is the end of current boids_list")
 
 
 def main():
-    num_boids = 50
+    num_boids = 20
     length = 1000
     width = 1000
-    height = 100
+    height = 1000
     boids_simulation = BoidsSimulation(length, width, height, num_boids)
     boids_simulation.boids_simulation()
 

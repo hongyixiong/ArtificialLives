@@ -49,10 +49,11 @@ class Vector:
         :param vector: a vector
         :return: a unit vector in the direction of v.
         """
-        if Vector.norm_2(vector) == 0:
+        norm = Vector.norm_2(vector)
+        if norm == 0:
             return vector
         else:
-            return Vector.multiply_constant(1 / Vector.norm_2(vector), vector)
+            return Vector.multiply_constant(1 / norm, vector)
 
     def __str__(self):
         return "[{}, {}, {}]".format(self.x, self.y, self.z)

@@ -49,7 +49,10 @@ class Vector:
         :param vector: a vector
         :return: a unit vector in the direction of v.
         """
-        return Vector.multiply_constant(1 / Vector.norm_2(vector), vector)
+        if Vector.norm_2(vector) == 0:
+            return vector
+        else:
+            return Vector.multiply_constant(1 / Vector.norm_2(vector), vector)
 
     def __str__(self):
         return "[{}, {}, {}]".format(self.x, self.y, self.z)
@@ -99,7 +102,8 @@ class BoidsSimulation:
         self.c_2 = 100 / 1000  # separation
         self.c_3 = 500 / 1000  # alignment
         self.c_5 = 20 / 1000  # tend to place
-        self.c_wind = 3  # wind
+        self.c_6 = 3  # wall force, need to be larger then c_wind to not appear "stuck on the wall"
+        self.c_wind = 2.5  # wind
 
         # the following are for drawing on a graph
         self.fig = None
@@ -150,11 +154,6 @@ class BoidsSimulation:
     def move_all_boids_to_new_positions(self):
         """
         Moves all boids to new positions.
-        Rule 1: cohesion
-        Rule 2: separation
-        Rule 3: alignment
-        Rule 4: wind
-        Rule 5: perching
         """
         temp_boids_list = []
         current_time = time.time()
@@ -171,7 +170,7 @@ class BoidsSimulation:
             v5 = Vector(0, 0, 0)
             if self.goal_start_time < current_time < self.goal_end_time:
                 if not self.is_goal_description_added:
-                    self.fig.text(0.01, 0.8, "* - Goal")
+                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
                     self.is_goal_description_added = True
                 if not self.is_goal_set:
                     goal_x = random.uniform(0, self.field_length)
@@ -185,7 +184,7 @@ class BoidsSimulation:
                 self.goal_end_time = self.goal_start_time + self.goal_duration
                 self.is_goal_set = False
 
-            v6 = self.bound_position(boid)
+            v6 = Vector.multiply_constant(self.c_6, self.bound_position(boid))
 
             temp_boid = Boid()
             temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v5, v6)
@@ -194,7 +193,7 @@ class BoidsSimulation:
             wind = Vector(0, 0, 0)
             if self.wind_start_time <= current_time <= self.wind_end_time:
                 if not self.is_wind_description_added:
-                    self.fig.text(0.01, 0.9, "Strong wind going (1, 0, 0) direction is in effect")
+                    self.fig.text(0.01, 0.9, "Strong wind going in direction (1, 0, 0) is in effect")
                     self.is_wind_description_added = True
                 wind = Vector.multiply_constant(self.c_wind, self.wind(boid))
             elif self.is_wind_description_added:
@@ -245,7 +244,7 @@ class BoidsSimulation:
             delta_vel.z = force
         elif boid_position.z > self.field_height:
             delta_vel.z = - force
-        return delta_vel
+        return Vector.unit(delta_vel)
 
     def rule1(self, boid):
         """

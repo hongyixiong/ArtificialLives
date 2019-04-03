@@ -187,12 +187,12 @@ class BoidsSimulation:
                     self.is_goal_set = True
                 if self.is_previous_tend_to_goal:
                     if not self.is_goal_description_added:
-                        self.fig.text(0.01, 0.9, "Away from goal, at the same time with scattering.")
+                        self.fig.text(0.01, 0.9, "Tendency away from goal, at the same time with scattering.")
                     v4 = Vector.multiply_constant(-self.c_5, self.tend_to_place(boid))
                     v1 = Vector.multiply_constant(self.c_scattering, self.cohesion(boid))
                 else:
                     if not self.is_goal_description_added:
-                        self.fig.text(0.01, 0.9, "Tend to goal")
+                        self.fig.text(0.01, 0.9, "Tendency to goal")
                     v4 = Vector.multiply_constant(self.c_4, self.tend_to_place(boid))
                     # v1 = Vector.multiply_constant(self.c_1, self.cohesion(boid))
                 self.is_goal_description_added = True

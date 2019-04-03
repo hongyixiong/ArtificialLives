@@ -65,7 +65,7 @@ class Boid:
         self.velocity = Vector(0, 0, 0)
         self.is_perching = False
         self.perching_start_time = 0
-        self.perching_avg_duration = 16
+        self.perching_avg_duration = 6
         self.perching_end_time = 0
 
     def __str__(self):
@@ -77,6 +77,7 @@ class BoidsSimulation:
         self.field_length = field_length
         self.field_width = field_width
         self.field_height = field_height
+        self.ground_level = 0.1
         self.num_boids = num_boids
         self.boids_list = []
 
@@ -103,10 +104,11 @@ class BoidsSimulation:
         self.c_1 = 1 / 1000  # cohesion
         self.c_2 = 100 / 1000  # separation
         self.c_3 = 500 / 1000  # alignment
-        self.c_4 = 20 / 1000  # tend to place
+        self.c_4 = 1 / 1000  # tend to place
         self.c_5 = 1 / 1000  # away from place
-        self.c_6 = 3  # wall force, need to be larger then c_wind to not appear "stuck on the wall"
-        self.c_wind = 2.5  # wind
+        self.c_6 = 3.1  # wall force, need to be larger then c_wind to not appear "stuck on the wall"
+        self.c_wind = 3  # wind
+        self.c_scattering = - self.c_1 * 10
 
         # the following are for drawing on a graph
         self.fig = None
@@ -159,6 +161,9 @@ class BoidsSimulation:
         """
         Moves all boids to new positions.
         """
+        self.fig.texts.clear()
+        self.is_wind_description_added = False
+        self.is_goal_description_added = False
         temp_boids_list = []
         for boid in self.boids_list:
             if boid.is_perching:
@@ -173,8 +178,10 @@ class BoidsSimulation:
             v4 = Vector(0, 0, 0)
             if self.goal_start_time < current_time_frame_time < self.goal_end_time:
                 if not self.is_goal_description_added:
-                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
-                    self.is_goal_description_added = True
+                    self.fig.text(0.01, 0.95, "A blue * represents current goal")
+                # if not self.is_goal_description_added:
+                #     self.fig.text(0.01, 0.8, "A blue * represents current goal")
+                #     self.is_goal_description_added = True
                 if not self.is_goal_set:
                     goal_x = random.uniform(0, self.field_length)
                     goal_y = random.uniform(0, self.field_width)
@@ -182,15 +189,16 @@ class BoidsSimulation:
                     self.goal = Vector(goal_x, goal_y, goal_z)
                     self.is_goal_set = True
                 if self.is_previous_tend_to_goal:
-                    self.fig.texts.clear()
-                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
-                    self.fig.text(0.01, 0.7, "Away from goal")
+                    if not self.is_goal_description_added:
+                        self.fig.text(0.01, 0.9, "Away from goal, at the same time with scattering.")
                     v4 = Vector.multiply_constant(-self.c_5, self.tend_to_place(boid))
+                    v1 = Vector.multiply_constant(self.c_scattering, self.cohesion(boid))
                 else:
-                    self.fig.texts.clear()
-                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
-                    self.fig.text(0.01, 0.7, "Tend to goal")
+                    if not self.is_goal_description_added:
+                        self.fig.text(0.01, 0.9, "Tend to goal")
                     v4 = Vector.multiply_constant(self.c_4, self.tend_to_place(boid))
+                    # v1 = Vector.multiply_constant(self.c_1, self.cohesion(boid))
+                self.is_goal_description_added = True
             elif current_time_frame_time > self.goal_end_time:
                 self.goal_start_time = time.time() + 15
                 self.goal_end_time = self.goal_start_time + self.goal_duration
@@ -219,8 +227,8 @@ class BoidsSimulation:
             temp_boid.position = Vector.add(boid.position, temp_boid.velocity, wind)
 
             # starts perching if reaches ground level
-            if temp_boid.position.z < 0.1:
-                temp_boid.position.z = 0.1
+            if temp_boid.position.z < self.ground_level:
+                temp_boid.position.z = self.ground_level
                 # todo: verify that this is not buggy
                 temp_boid.velocity = Vector(0, 0, 0)
                 temp_boid.perching_start_time = current_time_frame_time

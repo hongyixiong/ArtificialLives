@@ -119,11 +119,8 @@ class BoidsSimulation:
 
     def boids_simulation(self):
         self.initialise_boids()
-        self.print_boids_list()
         self.build_graph()
-        # tkinter.mainloop()
-        # todo: max_iteration to be removed, because we want it to continue until user closes the window.
-        max_iteration = 100
+        # max_iteration = 100
         iteration = 1
         # while iteration < max_iteration:
         while True:
@@ -237,9 +234,7 @@ class BoidsSimulation:
                 temp_boid.is_perching = True
 
             temp_boids_list.append(temp_boid)
-            # self.print_boids_list()
         self.boids_list = temp_boids_list
-        # self.print_boids_list()
 
     def limit_velocity(self, boid):
         """

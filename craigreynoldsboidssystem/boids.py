@@ -81,12 +81,12 @@ class BoidsSimulation:
         self.num_boids = num_boids
         self.boids_list = []
 
-        # todo: the following parameters can be changed.
         self.neighbour_radius = 200
         self.max_velocity = 3
-        self.max_acceleration = 0.1
+        # self.max_acceleration = 0.1
         self.safe_distance = 50
 
+        # Script parameters
         self.start_time = time.time()
         self.wind_start_time = self.start_time + 5
         self.wind_end_time = self.start_time + 15
@@ -100,14 +100,14 @@ class BoidsSimulation:
         self.is_goal_description_added = False
         self.is_previous_tend_to_goal = False
 
-        # the following are constant multipliers for rules
+        # Multipliers for rules
         self.c_1 = 1 / 1000  # cohesion
         self.c_2 = 100 / 1000  # separation
         self.c_3 = 300 / 1000  # alignment
         self.c_4 = 1 / 1000  # tend to place
         self.c_5 = 1 / 1000  # away from place
-        self.wall_force = 1
-        self.c_wind = 2  # wind
+        self.wall_force = 0.5
+        self.c_wind = 3  # wind
         self.c_scattering = - self.c_1 * 10
 
         # the following are for drawing on a graph
@@ -346,9 +346,7 @@ class BoidsSimulation:
         return Vector.add(self.goal, Vector.multiply_constant(-1, boid.position))
 
     def is_neighbour(self, boid_1, boid_2):
-        if Vector.euclidean_distance(boid_1.position, boid_2.position) <= self.neighbour_radius:
-            return True
-        return False
+        return Vector.euclidean_distance(boid_1.position, boid_2.position) <= self.neighbour_radius
 
     def build_graph(self):
         matplotlib.interactive(True)

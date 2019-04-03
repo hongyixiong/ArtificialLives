@@ -103,11 +103,11 @@ class BoidsSimulation:
         # the following are constant multipliers for rules
         self.c_1 = 1 / 1000  # cohesion
         self.c_2 = 100 / 1000  # separation
-        self.c_3 = 500 / 1000  # alignment
+        self.c_3 = 300 / 1000  # alignment
         self.c_4 = 1 / 1000  # tend to place
         self.c_5 = 1 / 1000  # away from place
-        self.c_6 = 3.1  # wall force, need to be larger then c_wind to not appear "stuck on the wall"
-        self.c_wind = 3  # wind
+        self.wall_force = 1
+        self.c_wind = 2  # wind
         self.c_scattering = - self.c_1 * 10
 
         # the following are for drawing on a graph
@@ -208,7 +208,7 @@ class BoidsSimulation:
                 else:
                     self.is_previous_tend_to_goal = True
 
-            v6 = Vector.multiply_constant(self.c_6, self.bound_position(boid))
+            v6 = Vector.multiply_constant(self.wall_force, self.bound_position(boid))
 
             temp_boid = Boid()
             temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v4, v6)

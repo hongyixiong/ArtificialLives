@@ -81,7 +81,7 @@ class BoidsSimulation:
         self.boids_list = []
 
         # todo: the following parameters can be changed.
-        self.neighbour_radius = 100
+        self.neighbour_radius = 200
         self.max_velocity = 3
         self.max_acceleration = 0.1
         self.safe_distance = 50
@@ -97,12 +97,14 @@ class BoidsSimulation:
         self.goal_end_time = self.goal_start_time + self.goal_duration
         self.is_goal_set = False
         self.is_goal_description_added = False
+        self.is_previous_tend_to_goal = False
 
         # the following are constant multipliers for rules
         self.c_1 = 1 / 1000  # cohesion
         self.c_2 = 100 / 1000  # separation
         self.c_3 = 500 / 1000  # alignment
-        self.c_5 = 20 / 1000  # tend to place
+        self.c_4 = 20 / 1000  # tend to place
+        self.c_5 = 1 / 1000  # away from place
         self.c_6 = 3  # wall force, need to be larger then c_wind to not appear "stuck on the wall"
         self.c_wind = 2.5  # wind
 
@@ -127,8 +129,9 @@ class BoidsSimulation:
                 # if user closes the figure, then break out of loop to terminate program.
                 break
             # print("The current frame number is:", iteration)
+            current_time = time.time()
             self.draw_boids()
-            self.move_all_boids_to_new_positions()
+            self.move_all_boids_to_new_positions(current_time)
             iteration += 1
 
     def initialise_boids(self):
@@ -152,12 +155,11 @@ class BoidsSimulation:
             boid.velocity = Vector(vel_x, vel_y, vel_z)
             self.boids_list.append(boid)
 
-    def move_all_boids_to_new_positions(self):
+    def move_all_boids_to_new_positions(self, current_time):
         """
         Moves all boids to new positions.
         """
         temp_boids_list = []
-        current_time = time.time()
         for boid in self.boids_list:
             if boid.is_perching:
                 if current_time <= boid.perching_end_time:
@@ -165,10 +167,10 @@ class BoidsSimulation:
                     continue
                 else:
                     boid.is_perching = False
-            v1 = Vector.multiply_constant(self.c_1, self.rule1(boid))
-            v2 = Vector.multiply_constant(self.c_2, self.rule2(boid))
-            v3 = Vector.multiply_constant(self.c_3, self.rule3(boid))
-            v5 = Vector(0, 0, 0)
+            v1 = Vector.multiply_constant(self.c_1, self.cohesion(boid))
+            v2 = Vector.multiply_constant(self.c_2, self.separation(boid))
+            v3 = Vector.multiply_constant(self.c_3, self.alignment(boid))
+            v4 = Vector(0, 0, 0)
             if self.goal_start_time < current_time < self.goal_end_time:
                 if not self.is_goal_description_added:
                     self.fig.text(0.01, 0.8, "A blue * represents current goal")
@@ -179,16 +181,29 @@ class BoidsSimulation:
                     goal_z = random.uniform(10, self.field_height)  # set minimum to 10 to reduce excessive perching
                     self.goal = Vector(goal_x, goal_y, goal_z)
                     self.is_goal_set = True
-                v5 = Vector.multiply_constant(self.c_5, self.tend_to_place(boid))
+                if self.is_previous_tend_to_goal:
+                    self.fig.texts.clear()
+                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
+                    self.fig.text(0.01, 0.7, "Away from goal")
+                    v4 = Vector.multiply_constant(-self.c_5, self.tend_to_place(boid))
+                else:
+                    self.fig.texts.clear()
+                    self.fig.text(0.01, 0.8, "A blue * represents current goal")
+                    self.fig.text(0.01, 0.7, "Tend to goal")
+                    v4 = Vector.multiply_constant(self.c_4, self.tend_to_place(boid))
             elif current_time > self.goal_end_time:
                 self.goal_start_time = time.time() + 15
                 self.goal_end_time = self.goal_start_time + self.goal_duration
                 self.is_goal_set = False
+                if self.is_previous_tend_to_goal:
+                    self.is_previous_tend_to_goal = False
+                else:
+                    self.is_previous_tend_to_goal = True
 
             v6 = Vector.multiply_constant(self.c_6, self.bound_position(boid))
 
             temp_boid = Boid()
-            temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v5, v6)
+            temp_boid.velocity = Vector.add(boid.velocity, v1, v2, v3, v4, v6)
             self.limit_velocity(temp_boid)
 
             wind = Vector(0, 0, 0)
@@ -247,7 +262,7 @@ class BoidsSimulation:
             delta_vel.z = - force
         return Vector.unit(delta_vel)
 
-    def rule1(self, boid):
+    def cohesion(self, boid):
         """
         This rule simulates flock cohesion.
         :param boid: the position of a selected boid
@@ -268,7 +283,7 @@ class BoidsSimulation:
         else:
             return delta_pos
 
-    def rule2(self, boid):
+    def separation(self, boid):
         """
         This rule simulates separation.
         :param boid: the position of a selected boid
@@ -284,7 +299,7 @@ class BoidsSimulation:
                     delta_vel = Vector.add(delta_vel, Vector.multiply_constant(-1, b.position), boid.position)
         return delta_vel
 
-    def rule3(self, boid):
+    def alignment(self, boid):
         """
         This rule simulates alignment.
         :param boid: the position of a selected boid
@@ -310,7 +325,6 @@ class BoidsSimulation:
         x = 1
         y = 0
         z = 0
-
         vec = Vector(x, y, z)
         # vec = Vector.unit(vec)
         return vec

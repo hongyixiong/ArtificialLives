@@ -129,9 +129,9 @@ class BoidsSimulation:
                 # if user closes the figure, then break out of loop to terminate program.
                 break
             # print("The current frame number is:", iteration)
-            current_time = time.time()
+            current_time_frame_time = time.time()
             self.draw_boids()
-            self.move_all_boids_to_new_positions(current_time)
+            self.move_all_boids_to_new_positions(current_time_frame_time)
             iteration += 1
 
     def initialise_boids(self):
@@ -155,14 +155,14 @@ class BoidsSimulation:
             boid.velocity = Vector(vel_x, vel_y, vel_z)
             self.boids_list.append(boid)
 
-    def move_all_boids_to_new_positions(self, current_time):
+    def move_all_boids_to_new_positions(self, current_time_frame_time):
         """
         Moves all boids to new positions.
         """
         temp_boids_list = []
         for boid in self.boids_list:
             if boid.is_perching:
-                if current_time <= boid.perching_end_time:
+                if current_time_frame_time <= boid.perching_end_time:
                     temp_boids_list.append(boid)
                     continue
                 else:
@@ -171,7 +171,7 @@ class BoidsSimulation:
             v2 = Vector.multiply_constant(self.c_2, self.separation(boid))
             v3 = Vector.multiply_constant(self.c_3, self.alignment(boid))
             v4 = Vector(0, 0, 0)
-            if self.goal_start_time < current_time < self.goal_end_time:
+            if self.goal_start_time < current_time_frame_time < self.goal_end_time:
                 if not self.is_goal_description_added:
                     self.fig.text(0.01, 0.8, "A blue * represents current goal")
                     self.is_goal_description_added = True
@@ -191,7 +191,7 @@ class BoidsSimulation:
                     self.fig.text(0.01, 0.8, "A blue * represents current goal")
                     self.fig.text(0.01, 0.7, "Tend to goal")
                     v4 = Vector.multiply_constant(self.c_4, self.tend_to_place(boid))
-            elif current_time > self.goal_end_time:
+            elif current_time_frame_time > self.goal_end_time:
                 self.goal_start_time = time.time() + 15
                 self.goal_end_time = self.goal_start_time + self.goal_duration
                 self.is_goal_set = False
@@ -207,7 +207,7 @@ class BoidsSimulation:
             self.limit_velocity(temp_boid)
 
             wind = Vector(0, 0, 0)
-            if self.wind_start_time <= current_time <= self.wind_end_time:
+            if self.wind_start_time <= current_time_frame_time <= self.wind_end_time:
                 if not self.is_wind_description_added:
                     self.fig.text(0.01, 0.9, "Strong wind going in direction (1, 0, 0) is in effect")
                     self.is_wind_description_added = True
@@ -223,7 +223,7 @@ class BoidsSimulation:
                 temp_boid.position.z = 0.1
                 # todo: verify that this is not buggy
                 temp_boid.velocity = Vector(0, 0, 0)
-                temp_boid.perching_start_time = current_time
+                temp_boid.perching_start_time = current_time_frame_time
                 temp_boid.perching_end_time = temp_boid.perching_start_time + temp_boid.perching_avg_duration \
                                               + random.uniform(-5, 5)
                 temp_boid.is_perching = True

@@ -29,6 +29,12 @@ class Vector:
 
     @staticmethod
     def euclidean_distance(vector_1, vector_2):
+        """
+        Calculates the Euclidean distance between the 2 given vectors.
+        :param vector_1: vector 1.
+        :param vector_2: vector 2.
+        :return: The Euclidean distance.
+        """
         return math.sqrt(
             (vector_1.x - vector_2.x) ** 2 + (vector_1.y - vector_2.y) ** 2 + (vector_1.z - vector_2.z) ** 2)
 
